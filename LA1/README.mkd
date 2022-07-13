@@ -1,0 +1,43 @@
+# COM3505 Lab Assessment 1
+
+
+
+## Introduction
+
+The assessment is to build and document a device that gives a visual indication of the activation strength of a touch sensor. We use the ESP32's built-in touch sensing capability. In our touchy thing, there is a simple wire connected to GPIO pin 32, and we use 3 LEDs (red light, yellow light, and green light) which are connected to GPIO pins 17, 21, 16 respectively to show how strong the sensor activation. In addition, the touchy thing can illuminate LEDs to indicate different levels seen by the touch sensor.
+
+
+
+## Work logic
+
+Firstly, we make sure we could use a wire to switch a light on and off, then we check the plotter to determine the capacitances of the light when we touch the cable and pin. Then we constructed 3 conditions to control the 3 LEDs when people touch the sensor: if the touch valve is lower than the red touch capacitance, turn on the red light; if the touch valve is lower than the yellow touch capacitance, turn on the yellow light; if there is no touching, we set the green light on by default. At last, we use Arduino IDE serial plotter to draw the curve.
+
+
+
+## Team collaborators
+
+Member1: Feng Li, email: fli31@sheffield.ac.uk, username: acb18fl
+
+Member2: Ruiqing Xu, email: rxu22@sheffield.ac.uk, username: acb19rx
+
+
+
+## Hardware photograph
+
+![touchything](touchything.jpeg)
+
+![circuit simulation](circuit simulation.png)
+
+
+
+## Brief video of the system in use
+
+The video is available on YouTube, see link: https://youtu.be/yipMxrSFCKQ
+
+
+
+## Arduino IDE serial plotter
+
+The image shown below is the output from the Arduino IDE serial plotter, with a jumper cable attached to GPIO pin 32, and `Serial.printf("%d\n", touchRead(T9));` in `loop()`. The high values (around 45) are where there is no touch happening; the first low range (around 35) is where the outside of the cable (which is covered in plastic) is touched; the second low range (around 20) is where the metal end of the cable is touched. In all cases, there are random spikes of noise.
+
+![plotter](plotter.jpeg)
