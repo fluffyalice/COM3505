@@ -1,0 +1,215 @@
+# DIY Marvin - a ESP32-based Voice-controlled Automation System with Wit.ai API
+
+## Introduction
+
+Lab assessment2 is to build an ESP32-based voice-controlled automation system called Marvin, which uses a custom microphone board and a low-noise MEMS mic. In this system, we use a pre-trained model to detect the words. The Wit.ai server will work out the user's intention, and then the ESP32 will execute the command [1]. In our project, we aim to implement greeting, LED music player, a "pain-sensitive" robot, and sentiment recognition, more details will be explained in the following sections.
+
+
+
+**Team collaborators:**
+
+- Member1: Feng Li, email: [fli31@sheffield.ac.uk](mailto:fli31@sheffield.ac.uk), username: acb18fl
+
+- Member2: Ruiqing Xu, email: [rxu22@sheffield.ac.uk](mailto:rxu22@sheffield.ac.uk), username: acb19rx
+
+  
+
+## Wit.ai API
+
+We use Wit.ai API to recognize the intent, which means it can help Marvin to understand what the user is asking him to do. We first create the application in [Wit.ai](https://wit.ai/) service and then give the application some sample phrases. After that, we start to train them with the aim to recognize what intent it should map the phase onto.
+
+To be more specific, in our project, we want to be able to make Marvin to understand:
+
+- How to greet people.
+
+- How to play music with lighting up to the rhythm.
+
+- How to make the Marvin 'feel pain'.
+
+- How to recognize people's emotions.
+
+  
+
+According to our project, we use three main building blocks of a Wit.ai application:
+
+- Intents
+
+  ![intent](images/intent.jpeg)
+
+- Traits
+
+![traits](images/traits.png)
+
+- Utterances
+
+  ![utterance](images/utterance.png)
+
+## Implementation
+
+We use a voice generator to generate the audio, and store them to the folder called `data`. As shown in the code block below, in order to extract the intent, entity and trait of the JSON file returned by Wit.ai after processing the audio, we modified the code which used to extract the sentiment  `traits` in `WitAiChunkedUploader.cpp` class.
+
+```cpp
+const char *text = doc["text"];
+const char *intent_name = doc["intents"][0]["name"];
+float intent_confidence = doc["intents"][0]["confidence"];
+const char *device_name = doc["entities"]["device:device"][0]["value"];
+float device_confidence = doc["entities"]["device:device"][0]["confidence"];
+const char *trait_value = doc["traits"]["wit$sentiment"][0]["value"];
+float trait_confidence = doc["traits"]["wit$sentiment"][0]["confidence"];
+```
+
+
+
+Specifically, we aim to implement following four functions based on Chris Greening's starting code [1]:
+
+- #### **Greeting**
+
+  It is design to greeting people at the beginning.
+
+  |                 Chat                  |       Marvin Response        |
+  | :-----------------------------------: | :--------------------------: |
+  | "How are you?" / "How are you doing?" | "I'm doing well, thank you." |
+
+  
+
+- #### **LED Music Player**
+
+  We tried to imitate led music players, so after we say "Marvin, play music!", our pre-recorded music will play out and the three coloured led bulbs on the board will light up in sequence to the music.
+
+  |     Chat      |       Marvin Response       |                         Board Action                         |
+  | :-----------: | :-------------------------: | :----------------------------------------------------------: |
+  | "Play music!" | Play our pre-recorded music | The red, green and yellow light will light up to the rhythm of the music. |
+
+  
+
+- #### “Pain-sensitive” Robot
+
+  We first define the capacitative of the pin mode no touch and touch pin separately. Then, when we ask Marvin how he feels Marvin will react and answer differently depending on whether we touch the pin or not.
+
+  |        Chat        |    Pin    |            Marvin Response            |
+  | :----------------: | :-------: | :-----------------------------------: |
+  | "How do you feel?" | No touch  |       "I don't feel anything."        |
+  | "How do you feel?" | Touch pin | "Ouch, you are holding me too tight!" |
+
+  
+
+- #### **Sentiment Recognition**
+
+  We use a built-in traits in Wit.ai that captures the sentiment in an utterance and returns `positive`, `neutral` or `negative`, so that we do not need to highlight a specific part (or span) in the utterance when we apply a trait. 
+
+  When we say something positive or negative, Marvin will response randomly by using the pre-record **positive-responses** and **negative-responses** audio. Because of the lack of memory of ESP32, we do not store the **neutral-response** audio in the data folder; instead, we are able to see Marvin's response by way of a terminal printout.
+
+  |               Chat               | Sentiment  |             Marvin Response              |
+  | :------------------------------: | :--------: | :--------------------------------------: |
+  |       "I failed my exam."        | `negative` | "Sometimes life is hard, you can do it!" |
+  | "I broke up with my boyfriend. " | `negative` |           "Keep your chin up!"           |
+  |    "I have won the lottery."     | `positive` |           "Wow, good for you."           |
+  |      "I find my dream job!"      | `positive` |    "Oh really, that's glad to hear."     |
+  |         "Cats eat fish."         | `neutral`  |       "I don't know how you feel."       |
+  
+  ![sentiment_terminal](images/sentiment_terminal.jpeg)
+  
+  
+  
+  As shown in the code block below, it works out the intent `sentiment` , and recognises the chat content as: `"value":"negative"   ` and  `"value":"positive"` with `"confidence":0.698` and `"confidence":0.7214` respectively.
+  
+  ```json
+  {
+    "text":"I failed my exam",
+  "intents":[
+    {"id":"383123820439806",
+     "name":"sentiment",
+     "confidence":0.9928}
+  ],
+  "entities":{},
+  "traits":{
+    "wit$sentiment":[
+      {"id":"5ac2b50a-44e4-466e-9d49 bad6bd40092c",
+       "value":"negative",
+       "confidence":0.698}
+    ]
+            }
+  }
+  ```
+  
+  ```json
+  {
+    "text":"I find my dream job",
+   "intents":[
+     {"id":"383123820439806",
+      "name":"sentiment",
+      "confidence":0.9935}
+   ],
+   "entities":{},
+   "traits":{
+     "wit$sentiment":[
+     {"id":"5ac2b50a-44e4-466e-9d49-bad6bd40092c",
+      "value":"positive",
+      "confidence":0.7214}
+   ]
+            }
+  }
+  ```
+  
+
+
+
+## Hardware Photograph
+
+![hardware](images/hardware.jpeg)
+
+The speaker volume can be changed by connecting the resistor to different pins, it is connected between GAIN and GND to obtain a maximum gain of 15dB for clearer hearing.
+
+![amp](images/amp.png)
+
+## Brief Video of the System
+
+The video is available on YouTube, see link: https://youtu.be/hiL7qi5jY-Q
+
+
+
+## Limitations
+
+- Limited memory space
+
+  Due to the limitation of the memory, we choose to compress all the audio files into size 855.7kb which meets the upper limit of the memory. This results in compressed audio files with a lot of noise.
+
+- Speaker noise
+
+  For some reason, the pitch of the sound coming out of the speaker is much lower than the actual 	audio, which makes it difficult to understand what Marvin is saying at times.
+
+- Lack of robustness
+
+  As mentioned in the implementation section before, the method of  extract the intent, entity and trait of the JSON file in the `WitAiChunkedUploader.cpp` class is not very robust. We have to manually change the name of the trait to suit our intentions, a better approach might have been to extract the name of the trait directly from the JSON rather than hard-coding it.
+
+
+
+## Bug Fixed
+
+When we ask Marvin to tell a joke, we notice that the `int joke` will be randomly assigned a number between 0 to 4, which means if the `int joke = 0` , Marvin will use the first joke audio as a response. However, when we try to ask Marvin to tell joke again, and the random joke happens to be the same as the last one, Marvin will not response, beacuse the `m_cantdo->reset();` is missing in the function, which means we need to reset the audio.
+
+```cpp
+void Speaker::playRandomJoke()
+{
+    int joke = random(5); 
+  	m_jokes[joke]->reset();// we add this line
+    m_i2s_output->setSampleGenerator(m_jokes[joke]);
+}
+```
+
+
+
+## Difficulties Encountered
+
+The development process has been difficult, we were unable to get Marvin to make any sound at the initial configuration stage, although we could see in the terminal that he did 'hear', and then we tried using a Windows computer and he miraculously responded. Regarding the audio files used in the project, we used a smart speech generator in order to keep the file size as small as possible. As mentioned before, the sound coming out of the speakers was very strange, so we tried different speech generators but none of them worked. The strangest part of the whole development process was Marvin's ability to play music. When we asked him to play music we could see through the output of the terminal that he understood our commands but just couldn't make a sound. We tried many different types of music files like piano music, synthesized music, musical accompaniment and realised that we were probably on the wrong track, so we tried to put the object of the music file into another command, for example, the logic in the code was that when I greeted Marvin it would play the music, and once again the miracle happened, it worked! This proves that it's not the audio file that's the problem, and similarly when we change the parameters of the play music command to a greeting response he can tell us how he's getting on. As of the submission of this project, we still haven't figured out why, but we suspect it has something to do with the ESP32's memory. But all in all, we did get Marvin to do a lot of things, so not too bad.
+
+
+
+## Reference
+
+[1] Chris, G. (2022, May 17). DIY Alexa With the ESP32 and Wit.AI. https://github.com/atomic14/diy-alexa
+
+[2] Hamish, C. (2022, May 17). DIY Alexa With the ESP32 and Wit.AI. https://github.com/hamishcunningham/diy-alexa
+
+[3] Projectpages.voicebooking.com. 2022. *Voicebooking.com*. [online] Available at: <https://projectpages.voicebooking.com/> 
+
