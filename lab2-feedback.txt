@@ -1,0 +1,6 @@
+This was a very good project which attracted 110 points and contributed 37.4% to your overall module grade of 77.4%. Well done!
+I particularly liked the clarity and depth of your documentation, and the fact that you had completed a significant number of quite complex
+and challenging modifications to the base Marvin system. The use of a voice generator was a nice touch, and I was impressed by your perseverance in face of the difficulties you faced with some elements of the hardware and firmware stack.
+Good work!
+(The grading output appears below.)
+Thanks for your contribution, and best of luck for the future!
